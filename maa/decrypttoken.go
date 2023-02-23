@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 )
 
 const aeadAdditionalData = "Transport Key"
@@ -15,8 +16,10 @@ const aeadAdditionalData = "Transport Key"
 //
 // This function uses the TPM for decryption and thus it must be called on the same machine that
 // created the attestation parameters via NewParameters. The PCR state must still be the same.
-func DecryptToken(token string) (string, error) {
-	tpm, err := newTPM()
+//
+// Optionally pass an opened TPM. If tpmHandle is nil, the default TPM will be opened.
+func DecryptToken(token string, tpmHandle io.ReadWriter) (string, error) {
+	tpm, err := newTPM(tpmHandle)
 	if err != nil {
 		return "", fmt.Errorf("opening TPM: %w", err)
 	}

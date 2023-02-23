@@ -10,7 +10,7 @@ import (
 //
 // This function combines NewParameters, GetEncryptedToken, and DecryptToken.
 func Attest(ctx context.Context, nonce []byte, maaURL string, httpClient HttpClient) (string, error) {
-	tpm, err := newTPM()
+	tpm, err := newTPM(nil)
 	if err != nil {
 		return "", fmt.Errorf("opening TPM: %w", err)
 	}

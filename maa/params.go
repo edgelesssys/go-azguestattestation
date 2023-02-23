@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -28,8 +29,10 @@ type Parameters struct {
 }
 
 // NewParameters collects all data that the MAA requires from the issuer's system.
-func NewParameters(ctx context.Context, nonce []byte, httpClient HttpClient) (Parameters, error) {
-	tpm, err := newTPM()
+//
+// Optionally pass an opened TPM. If tpmHandle is nil, the default TPM will be opened.
+func NewParameters(ctx context.Context, nonce []byte, httpClient HttpClient, tpmHandle io.ReadWriter) (Parameters, error) {
+	tpm, err := newTPM(tpmHandle)
 	if err != nil {
 		return Parameters{}, fmt.Errorf("opening TPM: %w", err)
 	}
