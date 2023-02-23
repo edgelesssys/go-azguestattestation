@@ -57,7 +57,10 @@ type tpm struct {
 	t io.ReadWriteCloser
 }
 
-func newTPM() (*tpm, error) {
+func newTPM(tpmHandle io.ReadWriter) (*tpm, error) {
+	if tpmHandle != nil {
+		return &tpm{nopCloser{tpmHandle}}, nil
+	}
 	t, err := tpm2.OpenTPM()
 	if err != nil {
 		return nil, err
@@ -235,4 +238,12 @@ func getSHA256PCRDigest(pcrs map[uint32][]byte) ([]byte, tpm2.PCRSelection, erro
 		}
 	}
 	return hasher.Sum(nil), sel, nil
+}
+
+type nopCloser struct {
+	io.ReadWriter
+}
+
+func (nopCloser) Close() error {
+	return nil
 }
