@@ -31,7 +31,7 @@ func TestGetEncryptedToken(t *testing.T) {
 					},
 				},
 			},
-			EventLog: []byte("eventlog"),
+			EventLog: specIDEvent,
 			AkCert:   []byte("akcert"),
 		},
 		EncKey:            []byte("enckey"),
@@ -55,7 +55,7 @@ func TestGetEncryptedToken(t *testing.T) {
 		OSBuild:  "Edgeless",
 		OSDistro: "Edgeless",
 		OSType:   "Edgeless",
-		TcgLogs:  []byte("eventlog"),
+		TcgLogs:  specIDEvent,
 		TpmInfo: tpmInfo{
 			AikCert:                    []byte("akcert"),
 			AikPub:                     append([]byte{0, 5}, []byte("akpub")...),

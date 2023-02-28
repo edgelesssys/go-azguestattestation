@@ -94,6 +94,11 @@ func newAttestationInfo(params Parameters) (attestationInfo, error) {
 		return attestationInfo{}, fmt.Errorf("marshaling AK pub: %w", err)
 	}
 
+	eventLog, err := stripEventLog(params.Attestation.EventLog)
+	if err != nil {
+		return attestationInfo{}, fmt.Errorf("stripping event log: %w", err)
+	}
+
 	quoteIdx, err := getSHA256QuoteIndex(params.Attestation.Quotes)
 	if err != nil {
 		return attestationInfo{}, err
@@ -134,7 +139,7 @@ func newAttestationInfo(params Parameters) (attestationInfo, error) {
 		OSBuild:  edgeless,
 		OSDistro: edgeless,
 		OSType:   edgeless,
-		TcgLogs:  params.Attestation.EventLog,
+		TcgLogs:  eventLog,
 		TpmInfo: tpmInfo{
 			AikCert:                    params.Attestation.AkCert,
 			AikPub:                     akPub,
