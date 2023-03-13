@@ -27,6 +27,26 @@ type (
 	Quote       = ptpm.Quote
 )
 
+// TPMAttest creates a TPM attestation for the given nonce.
+func TPMAttest(tpmHandle io.ReadWriter, nonce []byte) (*Attestation, error) {
+	t, err := newTPM(tpmHandle)
+	if err != nil {
+		return nil, err
+	}
+	defer t.Close()
+	return t.attest(nonce)
+}
+
+// TPMGetEncryptionKey gets an encryption key bound to the PCR state in quotes.
+func TPMGetEncryptionKey(tpmHandle io.ReadWriter, quotes []*Quote) (pubKey, certInfo, certInfoSig []byte, err error) {
+	t, err := newTPM(tpmHandle)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer t.Close()
+	return t.getEncryptionKey(quotes)
+}
+
 func getSignatureRSA(rawSig []byte) ([]byte, error) {
 	sig, err := tpm2.DecodeSignature(bytes.NewBuffer(rawSig))
 	if err != nil {
