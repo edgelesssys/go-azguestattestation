@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-tpm-tools/client"
 	"github.com/google/go-tpm-tools/proto/attest"
 	ptpm "github.com/google/go-tpm-tools/proto/tpm"
-	"github.com/google/go-tpm/tpm2"
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
 
@@ -81,7 +81,7 @@ func (t *tpm) attest(nonce []byte) (*Attestation, error) {
 	if err != nil {
 		return nil, err
 	}
-	key, err := client.LoadCachedKey(t.t, indexAKPub)
+	key, err := client.LoadCachedKey(t.t, indexAKPub, client.NullSession{})
 	if err != nil {
 		return nil, err
 	}
