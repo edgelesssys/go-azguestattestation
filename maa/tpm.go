@@ -27,6 +27,13 @@ type (
 	Quote       = ptpm.Quote
 )
 
+// pcrSelection is the minimal set of PCRs required by MAA as used in the official sample.
+//
+// Previously, we used the full selection, but that triggered a bug in MAA after an update. The
+// actual selection doesn't really matter because the purpose of this library is to use the MAA
+// to verify that the SNP report comes from an Azure CVM. The PCRs should be verified separately.
+var pcrSelection = tpm2.PCRSelection{Hash: tpm2.AlgSHA256, PCRs: []int{0, 1, 2, 3, 4, 5, 6, 7}}
+
 func getSignatureRSA(rawSig []byte) ([]byte, error) {
 	sig, err := tpm2.DecodeSignature(bytes.NewBuffer(rawSig))
 	if err != nil {
@@ -79,17 +86,25 @@ func (t *tpm) getHCLReport() ([]byte, error) {
 func (t *tpm) attest(nonce []byte) (*Attestation, error) {
 	cert, err := tpm2.NVReadEx(t.t, indexAKCert, tpm2.HandleOwner, "", 0)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading AK certificate from NV index: %w", err)
 	}
 	key, err := client.LoadCachedKey(t.t, indexAKPub, client.NullSession{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("loading AK: %w", err)
 	}
 	defer key.Close()
 	attestation, err := key.Attest(client.AttestOpts{Nonce: nonce})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generating attestation: %w", err)
 	}
+
+	// replace quote over all PCRs with quote over the selection
+	quote, err := key.Quote(pcrSelection, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("generating quote: %w", err)
+	}
+	attestation.Quotes = []*ptpm.Quote{quote}
+
 	attestation.AkCert = cert
 	return attestation, nil
 }
@@ -198,7 +213,7 @@ func (t *tpm) flushContext(handle tpmutil.Handle) {
 }
 
 func (t *tpm) readPCRs() (*ptpm.PCRs, error) {
-	return client.ReadPCRs(t.t, client.FullPcrSel(tpm2.AlgSHA256))
+	return client.ReadPCRs(t.t, pcrSelection)
 }
 
 func (t *tpm) getEncryptionKeyTemplate(pcrDigest []byte, sel tpm2.PCRSelection) (tpm2.Public, error) {
