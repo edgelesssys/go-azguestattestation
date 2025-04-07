@@ -16,6 +16,8 @@ import (
 var (
 	// APIVersion is the version of the MAA API to use.
 	APIVersion = "2020-10-01"
+	// AttestEndpoint is the MAA attestation endpoint.
+	AttestEndpoint = "attest/AzureGuest"
 	// OSBuild represents the OS build string.
 	OSBuild = "Edgeless"
 	// OSDistro represents the OS distribution, for example Ubuntu.
@@ -30,7 +32,7 @@ func GetEncryptedToken(ctx context.Context, params Parameters, nonce []byte, maa
 	if maaURL == "" {
 		return "", errors.New("maaURL is empty")
 	}
-	maaURL, err := url.JoinPath(maaURL, "attest/AzureGuest")
+	maaURL, err := url.JoinPath(maaURL, AttestEndpoint)
 	if err != nil {
 		return "", fmt.Errorf("parsing maaURL: %w", err)
 	}
