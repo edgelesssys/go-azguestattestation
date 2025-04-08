@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 
 	ptpm "github.com/google/go-tpm-tools/proto/tpm"
@@ -52,9 +53,9 @@ func TestGetEncryptedToken(t *testing.T) {
 			},
 			Type: "SevSnp",
 		},
-		OSBuild:  "Edgeless",
-		OSDistro: "Edgeless",
-		OSType:   "Edgeless",
+		OSBuild:  infoString(OSBuild),
+		OSDistro: infoString(OSDistro),
+		OSType:   infoString(OSType),
 		TcgLogs:  specIDEvent,
 		TpmInfo: tpmInfo{
 			AikCert:                    []byte("akcert"),
@@ -126,7 +127,11 @@ func TestGetEncryptedToken(t *testing.T) {
 
 			require.Len(tc.httpClient.requests, 1)
 			req := tc.httpClient.requests[0]
-			assert.Equal(tc.url+"/attest/AzureGuest?api-version=2020-10-01", req.URL.String())
+
+			maaURL, er := url.JoinPath(tc.url, AttestEndpoint)
+			require.NoError(er)
+
+			assert.Equal(maaURL+"?api-version="+APIVersion, req.URL.String())
 			var attReq attestRequest
 			require.NoError(json.NewDecoder(req.Body).Decode(&attReq))
 			assert.Equal(tc.wantAttestationInfo, attReq.AttestationInfo)

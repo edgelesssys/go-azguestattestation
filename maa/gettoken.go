@@ -13,17 +13,30 @@ import (
 	"sort"
 )
 
+var (
+	// APIVersion is the version of the MAA API to use.
+	APIVersion = "2020-10-01"
+	// AttestEndpoint is the MAA attestation endpoint.
+	AttestEndpoint = "attest/AzureGuest"
+	// OSBuild represents the OS build string.
+	OSBuild = "Edgeless"
+	// OSDistro represents the OS distribution, for example Ubuntu.
+	OSDistro = "Edgeless"
+	// OSType represents the OS type, for example Linux.
+	OSType = "Edgeless"
+)
+
 // GetEncryptedToken requests a token from MAA, which will be encrypted.
 func GetEncryptedToken(ctx context.Context, params Parameters, nonce []byte, maaURL string, httpClient HttpClient) (string, error) {
 	// create full URL
 	if maaURL == "" {
 		return "", errors.New("maaURL is empty")
 	}
-	maaURL, err := url.JoinPath(maaURL, "attest/AzureGuest")
+	maaURL, err := url.JoinPath(maaURL, AttestEndpoint)
 	if err != nil {
 		return "", fmt.Errorf("parsing maaURL: %w", err)
 	}
-	maaURL += "?api-version=2020-10-01"
+	maaURL += fmt.Sprintf("?api-version=%s", APIVersion)
 
 	attInfo, err := newAttestationInfo(params)
 	if err != nil {
@@ -122,8 +135,6 @@ func newAttestationInfo(params Parameters) (attestationInfo, error) {
 		pcrs[i].Index = index
 	}
 
-	const edgeless = "Edgeless"
-
 	attInfo := attestationInfo{
 		AttestationProtocolVersion: "2.0",
 		IsolationInfo: isolationInfo{
@@ -136,9 +147,9 @@ func newAttestationInfo(params Parameters) (attestationInfo, error) {
 			},
 			Type: "SevSnp",
 		},
-		OSBuild:  edgeless,
-		OSDistro: edgeless,
-		OSType:   edgeless,
+		OSBuild:  infoString(OSBuild),
+		OSDistro: infoString(OSDistro),
+		OSType:   infoString(OSType),
 		TcgLogs:  eventLog,
 		TpmInfo: tpmInfo{
 			AikCert:                    params.Attestation.AkCert,
